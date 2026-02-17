@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Project Unified</title>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js"></script>
     <style>
         :root {
             --gold: #F0C040;
@@ -642,6 +643,680 @@
 
         .toast.show { transform: translateX(-50%) translateY(0); }
 
+        /* ── TICKET FLOW MODALS ── */
+        .ticket-step { display: none; }
+        .ticket-step.active { display: block; }
+
+        /* QR Scanner View */
+        .qr-viewport {
+            background: var(--ink);
+            border-radius: var(--radius);
+            border: 2px solid rgba(240,192,64,0.25);
+            aspect-ratio: 1;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .qr-scan-line {
+            position: absolute;
+            left: 10%; right: 10%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            animation: scanLine 2s ease-in-out infinite;
+            top: 50%;
+        }
+
+        @keyframes scanLine {
+            0%   { top: 15%; opacity: 1; }
+            48%  { opacity: 1; }
+            50%  { top: 85%; opacity: 0.3; }
+            52%  { opacity: 1; }
+            100% { top: 15%; opacity: 1; }
+        }
+
+        .qr-corner {
+            position: absolute;
+            width: 28px; height: 28px;
+            border-color: var(--gold);
+            border-style: solid;
+        }
+        .qr-corner.tl { top: 14px; left: 14px;  border-width: 3px 0 0 3px; }
+        .qr-corner.tr { top: 14px; right: 14px; border-width: 3px 3px 0 0; }
+        .qr-corner.bl { bottom: 14px; left: 14px;  border-width: 0 0 3px 3px; }
+        .qr-corner.br { bottom: 14px; right: 14px; border-width: 0 3px 3px 0; }
+
+        .qr-inner-icon {
+            font-size: 3rem;
+            opacity: 0.18;
+        }
+
+        .qr-hint {
+            text-align: center;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-bottom: 18px;
+        }
+
+        .sim-scan-btn {
+            width: 100%;
+            padding: 15px;
+            background: rgba(240,192,64,0.1);
+            border: 1.5px dashed rgba(240,192,64,0.4);
+            border-radius: var(--radius-sm);
+            color: var(--gold);
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-bottom: 10px;
+        }
+        .sim-scan-btn:active { background: rgba(240,192,64,0.18); }
+
+        /* Ticket summary card */
+        .ticket-summary {
+            background: linear-gradient(135deg, #1E3A5F 0%, #0D2340 100%);
+            border: 1px solid rgba(240,192,64,0.2);
+            border-radius: var(--radius);
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+
+        .ticket-route {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .ticket-city {
+            flex: 1;
+            text-align: center;
+        }
+
+        .ticket-city-name {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+
+        .ticket-city-label {
+            font-size: 0.62rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .ticket-arrow {
+            font-size: 1.3rem;
+            color: var(--gold);
+        }
+
+        .ticket-meta {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .ticket-meta-item { text-align: center; }
+
+        .ticket-meta-val {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 0.88rem;
+            color: var(--gold);
+        }
+
+        .ticket-meta-key {
+            font-size: 0.62rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        /* Mobile Money Payment */
+        .momo-providers {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .momo-option {
+            background: var(--ink);
+            border: 1.5px solid rgba(255,255,255,0.08);
+            border-radius: var(--radius-sm);
+            padding: 12px 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.18s;
+        }
+
+        .momo-option:hover, .momo-option.selected {
+            border-color: var(--gold);
+            background: rgba(240,192,64,0.07);
+        }
+
+        .momo-icon { font-size: 1.4rem; margin-bottom: 4px; }
+
+        .momo-name {
+            font-family: 'Syne', sans-serif;
+            font-weight: 600;
+            font-size: 0.75rem;
+            color: var(--text-primary);
+        }
+
+        .momo-phone-row {
+            display: flex;
+            align-items: center;
+            background: var(--ink);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: var(--radius-sm);
+            padding: 0 14px;
+            margin-bottom: 14px;
+            transition: border-color 0.2s;
+        }
+        .momo-phone-row:focus-within { border-color: var(--gold); }
+
+        .phone-prefix {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--text-muted);
+            padding: 14px 10px 14px 0;
+            border-right: 1px solid rgba(255,255,255,0.08);
+            margin-right: 12px;
+        }
+
+        .phone-input {
+            flex: 1;
+            background: none;
+            border: none;
+            font-family: 'Syne', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            padding: 14px 0;
+            outline: none;
+        }
+
+        .phone-input::placeholder { color: var(--text-dim); font-weight: 400; }
+
+        .fare-total {
+            background: rgba(240,192,64,0.06);
+            border: 1px solid rgba(240,192,64,0.15);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .fare-label { font-size: 0.8rem; color: var(--text-muted); }
+
+        .fare-amount {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: var(--gold);
+        }
+
+        /* Processing */
+        .processing-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 0 10px;
+        }
+
+        .processing-spinner {
+            width: 60px; height: 60px;
+            border: 3px solid rgba(240,192,64,0.15);
+            border-top-color: var(--gold);
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+            margin-bottom: 18px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .processing-title {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            text-align: center;
+        }
+
+        .processing-sub {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        /* Conductor Code */
+        .success-tick {
+            width: 64px; height: 64px;
+            background: rgba(52,211,153,0.1);
+            border: 2px solid var(--success);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin: 0 auto 16px;
+        }
+
+        .conductor-code-wrap {
+            text-align: center;
+            margin-bottom: 18px;
+        }
+
+        .conductor-code-label {
+            font-size: 0.68rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            margin-bottom: 8px;
+        }
+
+        .conductor-code {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 2.8rem;
+            letter-spacing: 0.18em;
+            color: var(--gold);
+            background: rgba(240,192,64,0.06);
+            border: 2px solid rgba(240,192,64,0.25);
+            border-radius: var(--radius-sm);
+            padding: 16px 20px;
+            display: inline-block;
+            min-width: 200px;
+        }
+
+        .conductor-code-hint {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+
+        .boarding-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .boarding-box {
+            background: var(--ink);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: var(--radius-xs);
+            padding: 12px;
+            text-align: center;
+        }
+
+        .boarding-box-val {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        .boarding-box-key {
+            font-size: 0.62rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        .code-expires {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            color: var(--accent-orange);
+            margin-bottom: 18px;
+        }
+
+        .code-expires-dot {
+            width: 6px; height: 6px;
+            background: var(--accent-orange);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        /* ══ CONDUCTOR PORTAL ══ */
+        .conductor-portal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: #060B14;
+            z-index: 500;
+            overflow-y: auto;
+        }
+        .conductor-portal.open { display: block; }
+
+        .conductor-inner {
+            width: 100%;
+            max-width: 430px;
+            min-height: 100vh;
+            margin: 0 auto;
+        }
+
+        /* Screens */
+        .c-screen { display: none; }
+        .c-screen.active { display: block; }
+
+        /* ── LOGIN ── */
+        .c-login {
+            display: flex;
+            flex-direction: column;
+            padding: 40px 24px 30px;
+            min-height: 100vh;
+            justify-content: center;
+        }
+
+        .c-badge {
+            width: 76px; height: 76px;
+            background: linear-gradient(135deg, #1E3A5F, #0D2340);
+            border: 2px solid rgba(240,192,64,0.35);
+            border-radius: 22px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.2rem;
+            margin: 0 auto 18px;
+        }
+        .c-title {
+            font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.5rem;
+            color: var(--text-primary); text-align: center; margin-bottom: 4px;
+        }
+        .c-subtitle { font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-bottom: 28px; }
+
+        .c-field-label {
+            font-size: 0.68rem; font-weight: 600; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px;
+        }
+        .c-input {
+            width: 100%; background: var(--surface);
+            border: 1.5px solid rgba(255,255,255,0.08); border-radius: var(--radius-sm);
+            padding: 13px 15px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem;
+            color: var(--text-primary); margin-bottom: 16px; outline: none;
+            transition: border-color 0.2s;
+        }
+        .c-input:focus { border-color: var(--gold); }
+        .c-input::placeholder { color: var(--text-dim); }
+
+        .c-select {
+            width: 100%; background: var(--surface);
+            border: 1.5px solid rgba(255,255,255,0.08); border-radius: var(--radius-sm);
+            padding: 13px 15px; font-family: 'DM Sans', sans-serif; font-size: 0.88rem;
+            color: var(--text-primary); margin-bottom: 16px; outline: none;
+            transition: border-color 0.2s; appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237A90A8' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 14px center;
+        }
+        .c-select:focus { border-color: var(--gold); }
+
+        /* PIN */
+        .c-pin-wrap { display: flex; gap: 12px; justify-content: center; margin-bottom: 18px; }
+        .c-pin-dot {
+            width: 52px; height: 58px; background: var(--surface);
+            border: 1.5px solid rgba(255,255,255,0.08); border-radius: var(--radius-xs);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.4rem;
+            color: var(--text-primary); transition: all 0.2s;
+        }
+        .c-pin-dot.filled { border-color: var(--gold); background: rgba(240,192,64,0.08); color: var(--gold); }
+
+        /* Numpad */
+        .c-numpad { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 20px; }
+        .c-num-btn {
+            background: var(--surface-raised); border: 1px solid rgba(255,255,255,0.06);
+            border-radius: var(--radius-sm); padding: 16px 8px;
+            font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.2rem;
+            color: var(--text-primary); cursor: pointer; text-align: center;
+            transition: background 0.15s, transform 0.1s; user-select: none;
+        }
+        .c-num-btn:active { background: rgba(240,192,64,0.12); transform: scale(0.94); color: var(--gold); }
+        .c-num-btn.del { font-size: 1rem; color: var(--text-muted); }
+        .c-num-btn.empty { background: none; border: none; cursor: default; }
+
+        .c-login-btn {
+            width: 100%; padding: 16px; background: var(--gold); color: var(--ink);
+            border: none; border-radius: var(--radius-sm);
+            font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem;
+            cursor: pointer; transition: transform 0.15s, opacity 0.2s;
+        }
+        .c-login-btn:disabled { opacity: 0.38; cursor: default; }
+        .c-login-btn:not(:disabled):active { transform: scale(0.97); }
+        .c-back-link { text-align: center; font-size: 0.8rem; color: var(--text-dim); margin-top: 14px; cursor: pointer; }
+        .c-back-link:hover { color: var(--text-muted); }
+        .c-demo-hint {
+            margin-top: 20px; text-align: center; font-size: 0.7rem;
+            color: var(--text-dim); background: var(--surface);
+            border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius-xs);
+            padding: 10px 12px; line-height: 1.6;
+        }
+
+        /* ── TOP BAR / TABS ── */
+        .c-topbar {
+            display: flex; align-items: center; gap: 6px;
+            padding: 14px 14px 10px; background: var(--ink);
+            position: sticky; top: 0; z-index: 50;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .c-tab-pill {
+            flex: 1; padding: 8px 4px; border: none; cursor: pointer;
+            background: var(--surface); border-radius: 8px;
+            font-family: 'Syne', sans-serif; font-weight: 600; font-size: 0.62rem;
+            color: var(--text-dim); letter-spacing: 0.04em; transition: all 0.18s;
+        }
+        .c-tab-pill.active { background: var(--gold); color: var(--ink); }
+
+        .c-tab { display: none; padding: 18px 18px 40px; animation: fadeUp 0.3s ease; }
+        .c-tab.active { display: block; }
+
+        /* ── PROFILE ── */
+        .c-profile-hero {
+            background: linear-gradient(135deg, #1E3A5F 0%, #0D2340 100%);
+            border: 1px solid rgba(240,192,64,0.15);
+            border-radius: var(--radius); padding: 24px 16px 20px;
+            text-align: center; margin-bottom: 14px;
+        }
+        .c-profile-avatar {
+            width: 70px; height: 70px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.5rem;
+            color: var(--ink); margin: 0 auto 12px;
+            border: 3px solid rgba(240,192,64,0.4);
+        }
+        .c-profile-name {
+            font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.15rem;
+            color: var(--text-primary); margin-bottom: 3px;
+        }
+        .c-profile-id { font-size: 0.78rem; color: var(--gold); letter-spacing: 0.08em; margin-bottom: 8px; }
+        .c-profile-status {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 0.72rem; color: var(--success);
+            background: rgba(52,211,153,0.08); border: 1px solid rgba(52,211,153,0.2);
+            padding: 4px 12px; border-radius: 20px;
+        }
+        .c-status-dot { width: 6px; height: 6px; background: var(--success); border-radius: 50%; animation: pulse 2s infinite; }
+
+        .c-profile-cards {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;
+        }
+        .c-profile-card {
+            background: var(--surface); border: 1px solid rgba(255,255,255,0.05);
+            border-radius: var(--radius-sm); padding: 14px 12px; text-align: center;
+        }
+        .c-pc-icon { font-size: 1.3rem; margin-bottom: 5px; }
+        .c-pc-val { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.88rem; color: var(--gold); }
+        .c-pc-key { font-size: 0.6rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.07em; margin-top: 2px; }
+
+        .c-info-block {
+            background: var(--surface); border: 1px solid rgba(255,255,255,0.05);
+            border-radius: var(--radius-sm); margin-bottom: 14px; overflow: hidden;
+        }
+        .c-info-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .c-info-row:last-child { border-bottom: none; }
+        .c-info-key { font-size: 0.72rem; color: var(--text-dim); }
+        .c-info-val { font-family: 'Syne', sans-serif; font-weight: 600; font-size: 0.8rem; color: var(--text-primary); }
+
+        .c-shift-stats {
+            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px;
+        }
+        .c-ss-box {
+            background: var(--surface); border: 1px solid rgba(255,255,255,0.05);
+            border-radius: var(--radius-sm); padding: 13px 10px; text-align: center;
+        }
+        .c-ss-val { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.2rem; color: var(--gold); }
+        .c-ss-key { font-size: 0.6rem; color: var(--text-dim); text-transform: uppercase; margin-top: 3px; }
+
+        .c-action-btn {
+            width: 100%; padding: 15px; border: none; border-radius: var(--radius-sm);
+            font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.92rem;
+            cursor: pointer; transition: transform 0.15s, opacity 0.15s; display: block;
+        }
+        .c-action-btn.gold { background: var(--gold); color: var(--ink); }
+        .c-action-btn.teal { background: rgba(45,212,191,0.12); color: var(--accent-teal); border: 1px solid rgba(45,212,191,0.25); }
+        .c-action-btn:active { transform: scale(0.97); }
+
+        .c-section-title {
+            font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem;
+            color: var(--text-primary); margin-bottom: 16px;
+        }
+
+        /* ── BARCODE CARD ── */
+        .c-bc-form { margin-bottom: 20px; }
+
+        .c-bc-card {
+            background: #fff; border-radius: var(--radius); overflow: hidden;
+            margin-bottom: 10px; box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+        }
+        .c-bc-card-header {
+            background: var(--ink); padding: 14px 16px;
+            display: flex; justify-content: space-between; align-items: flex-start;
+            border-bottom: 3px solid var(--gold);
+        }
+        .c-bc-route {
+            font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1rem;
+            color: var(--gold);
+        }
+        .c-bc-trip { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+        .c-bc-fare {
+            font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+        .c-bc-time { font-size: 0.72rem; color: var(--text-muted); text-align: right; }
+
+        .c-bc-wrap {
+            background: #fff; padding: 20px 16px 10px;
+            display: flex; justify-content: center;
+        }
+        .c-bc-wrap svg { max-width: 100%; height: auto; }
+
+        .c-bc-code-txt {
+            text-align: center; font-family: 'Courier New', monospace;
+            font-size: 0.85rem; font-weight: 700; color: #222;
+            padding: 0 16px 8px; letter-spacing: 0.12em;
+        }
+        .c-bc-meta {
+            display: flex; justify-content: center; gap: 6px; flex-wrap: wrap;
+            font-size: 0.62rem; color: #666; padding: 0 16px 12px; text-align: center;
+        }
+        .c-bc-hint {
+            background: #f8f8f8; border-top: 1px solid #eee;
+            text-align: center; font-size: 0.7rem; color: #888;
+            padding: 8px 12px;
+        }
+
+        /* ── VERIFY ── */
+        .c-verify-box { background: var(--surface); border: 1px solid rgba(255,255,255,0.06); border-radius: var(--radius); padding: 18px; margin-bottom: 14px; }
+        .c-code-entry { display: flex; gap: 7px; margin-bottom: 14px; }
+        .c-digit {
+            flex: 1; height: 52px; background: var(--ink);
+            border: 1.5px solid rgba(255,255,255,0.08); border-radius: var(--radius-xs);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.3rem;
+            color: var(--text-primary); transition: border-color 0.2s;
+        }
+        .c-digit.active-digit { border-color: var(--gold); background: rgba(240,192,64,0.06); }
+        .c-digit.filled-digit { border-color: rgba(240,192,64,0.3); color: var(--gold); }
+
+        .c-verify-numpad { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 14px; }
+        .cv-btn {
+            background: var(--surface-raised); border: 1px solid rgba(255,255,255,0.06);
+            border-radius: var(--radius-xs); padding: 13px 6px;
+            font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.1rem;
+            color: var(--text-primary); cursor: pointer; text-align: center;
+            transition: background 0.15s, transform 0.1s; user-select: none;
+        }
+        .cv-btn:active { background: rgba(240,192,64,0.12); transform: scale(0.94); color: var(--gold); }
+        .cv-btn.del-v { font-size: 0.9rem; color: var(--text-muted); }
+        .cv-btn.empty-v { background: none; border: none; cursor: default; }
+
+        .c-verify-btn {
+            width: 100%; padding: 14px; background: var(--gold); color: var(--ink);
+            border: none; border-radius: var(--radius-sm);
+            font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem;
+            cursor: pointer; transition: transform 0.15s, opacity 0.2s;
+        }
+        .c-verify-btn:disabled { opacity: 0.35; cursor: default; }
+        .c-verify-btn:not(:disabled):active { transform: scale(0.97); }
+
+        /* Result */
+        .c-result { border-radius: var(--radius-sm); padding: 16px; margin-bottom: 14px; animation: fadeUp 0.3s ease; }
+        .c-result.valid  { background: rgba(52,211,153,0.08);  border: 1.5px solid rgba(52,211,153,0.3); }
+        .c-result.invalid{ background: rgba(249,115,22,0.08);   border: 1.5px solid rgba(249,115,22,0.3); }
+        .c-result-icon { font-size: 1.5rem; margin-bottom: 5px; }
+        .c-result-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.92rem; margin-bottom: 10px; }
+        .c-result.valid   .c-result-title { color: var(--success); }
+        .c-result.invalid .c-result-title { color: var(--accent-orange); }
+        .c-result-detail { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .c-rd-key { font-size: 0.6rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.07em; }
+        .c-rd-val { font-family: 'Syne', sans-serif; font-weight: 600; font-size: 0.8rem; color: var(--text-primary); }
+
+        /* Log */
+        .c-log-count { background: rgba(240,192,64,0.12); color: var(--gold); font-size: 0.68rem; padding: 2px 8px; border-radius: 20px; }
+        .c-log-empty { text-align: center; font-size: 0.78rem; color: var(--text-dim); padding: 20px 0; }
+        .c-log-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 11px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+            animation: fadeUp 0.25s ease;
+        }
+        .c-log-item:last-child { border-bottom: none; }
+        .c-log-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .c-log-dot.ok  { background: var(--success); }
+        .c-log-dot.bad { background: var(--accent-orange); }
+        .c-log-code { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.85rem; color: var(--text-primary); flex: 1; }
+        .c-log-route { font-size: 0.68rem; color: var(--text-muted); }
+        .c-log-status { font-size: 0.65rem; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+        .c-log-status.ok  { background: rgba(52,211,153,0.12); color: var(--success); }
+        .c-log-status.bad { background: rgba(249,115,22,0.12); color: var(--accent-orange); }
+
+        /* Conductor portal entry button */
+        .conductor-entry-btn {
+            display: flex; align-items: center; gap: 14px; padding: 16px;
+            background: linear-gradient(135deg, rgba(240,192,64,0.08), rgba(240,192,64,0.03));
+            border: 1.5px solid rgba(240,192,64,0.22); border-radius: var(--radius-sm);
+            cursor: pointer; transition: all 0.18s; margin-bottom: 10px;
+        }
+        .conductor-entry-btn:hover { background: rgba(240,192,64,0.12); border-color: rgba(240,192,64,0.4); }
+        .conductor-entry-btn:active { transform: scale(0.98); }
+
         /* ── STATS ROW ── */
         .stats-row {
             display: grid;
@@ -800,11 +1475,11 @@
                 <span class="section-chip">4 Services</span>
             </div>
 
-            <div class="action-row" onclick="showToast('Opening QR Scanner…')">
+            <div class="action-row" onclick="openTicketScanner()">
                 <div class="action-icon-wrap gold">🎫</div>
                 <div class="action-text">
                     <div class="action-label">Scan Bus Ticket</div>
-                    <div class="action-desc">Use camera to validate boarding pass</div>
+                    <div class="action-desc">Scan QR · Pay · Get conductor code</div>
                 </div>
                 <span class="action-chevron">›</span>
             </div>
@@ -834,6 +1509,15 @@
                     <div class="action-desc">Battery swap + maintenance cover</div>
                 </div>
                 <span class="action-badge badge-gold">Phase 4</span>
+            </div>
+
+            <div class="conductor-entry-btn" onclick="openConductorPortal()">
+                <div class="action-icon-wrap gold">🚌</div>
+                <div class="action-text">
+                    <div class="action-label" style="color:var(--gold); font-family:'Syne',sans-serif; font-weight:700;">Conductor Portal</div>
+                    <div class="action-desc">Login &amp; verify passenger codes</div>
+                </div>
+                <span class="action-badge badge-gold">Staff</span>
             </div>
 
             <a href="https://samuelmwaz.github.io/Project-Unified/home" target="_blank" class="action-row" style="text-decoration: none;">
@@ -982,6 +1666,153 @@
     </main>
 </div>
 
+<!-- ══ TICKET FLOW MODAL ══ -->
+<div class="modal-overlay" id="ticket-modal" onclick="handleTicketModalClick(event)">
+    <div class="modal-sheet" style="max-height: 92vh; overflow-y: auto;">
+        <div class="modal-handle"></div>
+
+        <!-- STEP 1: QR SCANNER -->
+        <div class="ticket-step active" id="step-scan">
+            <div class="modal-title">🎫 Scan Bus Ticket</div>
+            <div class="qr-viewport">
+                <div class="qr-corner tl"></div>
+                <div class="qr-corner tr"></div>
+                <div class="qr-corner bl"></div>
+                <div class="qr-corner br"></div>
+                <div class="qr-scan-line"></div>
+                <div class="qr-inner-icon">📷</div>
+            </div>
+            <p class="qr-hint">Point your camera at the QR code on your ticket or bus stop</p>
+            <button class="sim-scan-btn" onclick="simulateScan()">📲 &nbsp;Tap to Scan QR Code</button>
+            <span class="modal-cancel" onclick="closeTicketModal()">Cancel</span>
+        </div>
+
+        <!-- STEP 2: TICKET DETAILS + PAYMENT -->
+        <div class="ticket-step" id="step-pay">
+            <div class="modal-title">💳 Confirm & Pay</div>
+
+            <!-- Ticket Summary -->
+            <div class="ticket-summary">
+                <div class="ticket-route">
+                    <div class="ticket-city">
+                        <div class="ticket-city-name" id="tc-from">City Market</div>
+                        <div class="ticket-city-label">From</div>
+                    </div>
+                    <div class="ticket-arrow">→</div>
+                    <div class="ticket-city">
+                        <div class="ticket-city-name" id="tc-to">Chilenje</div>
+                        <div class="ticket-city-label">To</div>
+                    </div>
+                </div>
+                <div class="ticket-meta">
+                    <div class="ticket-meta-item">
+                        <div class="ticket-meta-val" id="tc-bus">Bus 14A</div>
+                        <div class="ticket-meta-key">Route</div>
+                    </div>
+                    <div class="ticket-meta-item">
+                        <div class="ticket-meta-val" id="tc-seat">Seat 07</div>
+                        <div class="ticket-meta-key">Seat</div>
+                    </div>
+                    <div class="ticket-meta-item">
+                        <div class="ticket-meta-val" id="tc-time">14:30</div>
+                        <div class="ticket-meta-key">Departs</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Money Provider -->
+            <div style="font-size:0.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:8px;">Mobile Money Provider</div>
+            <div class="momo-providers">
+                <div class="momo-option selected" id="momo-airtel" onclick="selectMomo('airtel')">
+                    <div class="momo-icon">🟥</div>
+                    <div class="momo-name">Airtel Money</div>
+                </div>
+                <div class="momo-option" id="momo-mtn" onclick="selectMomo('mtn')">
+                    <div class="momo-icon">🟨</div>
+                    <div class="momo-name">MTN Money</div>
+                </div>
+                <div class="momo-option" id="momo-zamtel" onclick="selectMomo('zamtel')">
+                    <div class="momo-icon">🟩</div>
+                    <div class="momo-name">Zamtel Kwacha</div>
+                </div>
+                <div class="momo-option" id="momo-wallet" onclick="selectMomo('wallet')">
+                    <div class="momo-icon">💛</div>
+                    <div class="momo-name">PU Wallet</div>
+                </div>
+            </div>
+
+            <!-- Phone number input (hidden for wallet) -->
+            <div id="phone-field">
+                <div style="font-size:0.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:8px;">Mobile Number</div>
+                <div class="momo-phone-row">
+                    <div class="phone-prefix">+260</div>
+                    <input class="phone-input" id="phone-input" type="tel" placeholder="97 123 4567" maxlength="10" />
+                </div>
+            </div>
+
+            <!-- Fare -->
+            <div class="fare-total">
+                <span class="fare-label">Total Fare</span>
+                <span class="fare-amount">K <span id="tc-fare">12.00</span></span>
+            </div>
+
+            <button class="modal-confirm-btn" onclick="confirmPayment()">Pay Now →</button>
+            <span class="modal-cancel" onclick="closeTicketModal()">Cancel</span>
+        </div>
+
+        <!-- STEP 3: PROCESSING -->
+        <div class="ticket-step" id="step-processing">
+            <div class="processing-wrap">
+                <div class="processing-spinner"></div>
+                <div class="processing-title">Processing Payment…</div>
+                <div class="processing-sub" id="processing-sub-text">Connecting to Airtel Money</div>
+            </div>
+        </div>
+
+        <!-- STEP 4: CONDUCTOR CODE -->
+        <div class="ticket-step" id="step-code">
+            <div style="text-align:center; margin-bottom:12px;">
+                <div class="success-tick">✓</div>
+                <div style="font-family:'Syne',sans-serif; font-weight:700; font-size:1.1rem; color:var(--success); margin-bottom:4px;">Payment Confirmed!</div>
+                <div style="font-size:0.78rem; color:var(--text-muted);">Show this code to your conductor</div>
+            </div>
+
+            <div class="conductor-code-wrap">
+                <div class="conductor-code-label">Conductor Code</div>
+                <div class="conductor-code" id="conductor-code-display">——</div>
+                <div class="conductor-code-hint">Tell or show this 6-digit code to board</div>
+            </div>
+
+            <div class="code-expires">
+                <div class="code-expires-dot"></div>
+                <span id="code-expires-txt">Expires in 30:00</span>
+            </div>
+
+            <div class="boarding-info">
+                <div class="boarding-box">
+                    <div class="boarding-box-val" id="bc-from">City Market</div>
+                    <div class="boarding-box-key">From</div>
+                </div>
+                <div class="boarding-box">
+                    <div class="boarding-box-val" id="bc-to">Chilenje</div>
+                    <div class="boarding-box-key">To</div>
+                </div>
+                <div class="boarding-box">
+                    <div class="boarding-box-val" id="bc-bus">Bus 14A</div>
+                    <div class="boarding-box-key">Route</div>
+                </div>
+                <div class="boarding-box">
+                    <div class="boarding-box-val" id="bc-fare">K 12.00</div>
+                    <div class="boarding-box-key">Paid</div>
+                </div>
+            </div>
+
+            <button class="modal-confirm-btn" style="background: var(--surface-raised); color:var(--text-primary);" onclick="closeTicketModal()">Done ✓</button>
+        </div>
+
+    </div>
+</div>
+
 <!-- TOP-UP MODAL -->
 <div class="modal-overlay" id="topup-modal" onclick="handleModalClick(event)">
     <div class="modal-sheet">
@@ -1001,6 +1832,240 @@
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
+
+<!-- ══ CONDUCTOR PORTAL ══ -->
+<div class="conductor-portal" id="conductor-portal">
+  <div class="conductor-inner">
+
+    <!-- ── SCREEN: LOGIN ── -->
+    <div id="c-screen-login" class="c-screen active">
+      <div class="c-login">
+        <div class="c-badge">🚌</div>
+        <div class="c-title">Conductor Login</div>
+        <div class="c-subtitle">Project Unified · Staff Portal</div>
+
+        <div class="c-field-label">Staff ID</div>
+        <input class="c-input" id="c-staff-id" type="text" placeholder="e.g. CD-047" autocomplete="off" oninput="checkLoginReady()" />
+
+        <div class="c-field-label">4-Digit PIN</div>
+        <div class="c-pin-wrap">
+          <div class="c-pin-dot" id="cpd0">–</div>
+          <div class="c-pin-dot" id="cpd1">–</div>
+          <div class="c-pin-dot" id="cpd2">–</div>
+          <div class="c-pin-dot" id="cpd3">–</div>
+        </div>
+
+        <div class="c-numpad">
+          <div class="c-num-btn" onclick="cPinKey('1')">1</div>
+          <div class="c-num-btn" onclick="cPinKey('2')">2</div>
+          <div class="c-num-btn" onclick="cPinKey('3')">3</div>
+          <div class="c-num-btn" onclick="cPinKey('4')">4</div>
+          <div class="c-num-btn" onclick="cPinKey('5')">5</div>
+          <div class="c-num-btn" onclick="cPinKey('6')">6</div>
+          <div class="c-num-btn" onclick="cPinKey('7')">7</div>
+          <div class="c-num-btn" onclick="cPinKey('8')">8</div>
+          <div class="c-num-btn" onclick="cPinKey('9')">9</div>
+          <div class="c-num-btn empty"></div>
+          <div class="c-num-btn" onclick="cPinKey('0')">0</div>
+          <div class="c-num-btn del" onclick="cPinDel()">⌫</div>
+        </div>
+
+        <button class="c-login-btn" id="c-login-btn" onclick="conductorLogin()" disabled>Login →</button>
+        <div class="c-back-link" onclick="closeConductorPortal()">← Back to App</div>
+
+        <div class="c-demo-hint">
+          Demo: CD-047 / 1234 &nbsp;·&nbsp; CD-012 / 5678 &nbsp;·&nbsp; or any ID + 4 digits
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SCREEN: PROFILE ── -->
+    <div id="c-screen-profile" class="c-screen">
+
+      <!-- sticky top bar -->
+      <div class="c-topbar">
+        <button class="c-tab-pill active" onclick="cShowTab('profile')">Profile</button>
+        <button class="c-tab-pill" onclick="cShowTab('barcode')">Barcode</button>
+        <button class="c-tab-pill" onclick="cShowTab('verify')">Verify</button>
+        <button class="c-tab-pill" onclick="cShowTab('log')">Log</button>
+        <button class="c-logout-btn" onclick="conductorLogout()">Out</button>
+      </div>
+
+      <!-- TAB: PROFILE -->
+      <div class="c-tab active" id="ctab-profile">
+        <div class="c-profile-hero">
+          <div class="c-profile-avatar" id="cp-avatar-circle">JB</div>
+          <div class="c-profile-name"   id="cp-fullname">John Banda</div>
+          <div class="c-profile-id"     id="cp-staffid">CD-047</div>
+          <div class="c-profile-status"><span class="c-status-dot"></span>On Duty</div>
+        </div>
+
+        <div class="c-profile-cards">
+          <div class="c-profile-card">
+            <div class="c-pc-icon">🚌</div>
+            <div class="c-pc-val" id="cp-route">Bus 14A</div>
+            <div class="c-pc-key">Assigned Route</div>
+          </div>
+          <div class="c-profile-card">
+            <div class="c-pc-icon">📍</div>
+            <div class="c-pc-val" id="cp-zone">City Zone</div>
+            <div class="c-pc-key">Zone</div>
+          </div>
+          <div class="c-profile-card">
+            <div class="c-pc-icon">📅</div>
+            <div class="c-pc-val" id="cp-shift">Morning</div>
+            <div class="c-pc-key">Shift</div>
+          </div>
+          <div class="c-profile-card">
+            <div class="c-pc-icon">⭐</div>
+            <div class="c-pc-val" id="cp-rating">4.9</div>
+            <div class="c-pc-key">Rating</div>
+          </div>
+        </div>
+
+        <div class="c-info-block">
+          <div class="c-info-row"><span class="c-info-key">Full Name</span><span class="c-info-val" id="cp-name2">John Banda</span></div>
+          <div class="c-info-row"><span class="c-info-key">Staff ID</span><span class="c-info-val" id="cp-id2">CD-047</span></div>
+          <div class="c-info-row"><span class="c-info-key">Phone</span><span class="c-info-val" id="cp-phone">+260 97 411 0047</span></div>
+          <div class="c-info-row"><span class="c-info-key">Vehicle Reg</span><span class="c-info-val" id="cp-vehicle">ZM 4721 AB</span></div>
+          <div class="c-info-row"><span class="c-info-key">License</span><span class="c-info-val" id="cp-license">PSV-2019-047</span></div>
+          <div class="c-info-row"><span class="c-info-key">Joined</span><span class="c-info-val" id="cp-joined">Mar 2019</span></div>
+        </div>
+
+        <div class="c-shift-stats">
+          <div class="c-ss-box"><div class="c-ss-val" id="css-verified">0</div><div class="c-ss-key">Boarded</div></div>
+          <div class="c-ss-box"><div class="c-ss-val" id="css-rejected">0</div><div class="c-ss-key">Rejected</div></div>
+          <div class="c-ss-box"><div class="c-ss-val" id="css-revenue">K 0</div><div class="c-ss-key">Revenue</div></div>
+        </div>
+
+        <button class="c-action-btn teal" onclick="cShowTab('barcode')">Generate Ticket Barcode →</button>
+      </div>
+
+      <!-- TAB: BARCODE GENERATOR -->
+      <div class="c-tab" id="ctab-barcode">
+        <div class="c-section-title">🎫 Generate Ticket Barcode</div>
+
+        <div class="c-bc-form">
+          <div class="c-field-label">Route / Bus</div>
+          <select class="c-select" id="bc-route-sel" onchange="bcRouteChanged()">
+            <option value="Bus 14A|City Market|Chilenje|12.00">Bus 14A — City Market → Chilenje</option>
+            <option value="Bus 22B|Lusaka CBD|Matero|8.00">Bus 22B — Lusaka CBD → Matero</option>
+            <option value="Bus 08C|Kalingalinga|Kabulonga|15.00">Bus 08C — Kalingalinga → Kabulonga</option>
+            <option value="Bus 31D|Northmead|Chelstone|10.00">Bus 31D — Northmead → Chelstone</option>
+          </select>
+
+          <div class="c-field-label">Departure Time</div>
+          <input class="c-input" id="bc-time" type="time" value="14:30" />
+
+          <div class="c-field-label">Seat Number</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+            <input class="c-input" id="bc-seat" type="number" placeholder="e.g. 7" min="1" max="50" style="margin-bottom:0" />
+            <div>
+              <div class="c-field-label" style="margin-bottom:4px;">Fare (K)</div>
+              <input class="c-input" id="bc-fare" type="number" placeholder="12.00" style="margin-bottom:0" />
+            </div>
+          </div>
+
+          <button class="c-action-btn gold" onclick="generateBarcode()">Generate Barcode ↓</button>
+        </div>
+
+        <!-- Generated barcode card -->
+        <div class="c-bc-card" id="c-bc-card" style="display:none;">
+          <div class="c-bc-card-header">
+            <div>
+              <div class="c-bc-route" id="bc-display-route">Bus 14A</div>
+              <div class="c-bc-trip"  id="bc-display-trip">City Market → Chilenje</div>
+            </div>
+            <div style="text-align:right;">
+              <div class="c-bc-fare"  id="bc-display-fare">K 12.00</div>
+              <div class="c-bc-time"  id="bc-display-time">14:30</div>
+            </div>
+          </div>
+
+          <div class="c-bc-wrap">
+            <svg id="bc-svg"></svg>
+          </div>
+
+          <div class="c-bc-code-txt" id="bc-code-txt">PU-000000-14A</div>
+
+          <div class="c-bc-meta">
+            <span id="bc-meta-seat">Seat 07</span>
+            <span>·</span>
+            <span id="bc-meta-conductor">Conductor: John Banda</span>
+            <span>·</span>
+            <span id="bc-meta-date">Today</span>
+          </div>
+
+          <div class="c-bc-hint">Passenger scans this barcode to pay &amp; board</div>
+
+          <button class="c-action-btn teal" style="margin-top:12px;" onclick="regenerateBarcode()">↻ New Barcode</button>
+        </div>
+      </div>
+
+      <!-- TAB: VERIFY CODE -->
+      <div class="c-tab" id="ctab-verify">
+        <div class="c-section-title">🔢 Verify Passenger Code</div>
+
+        <div class="c-verify-box">
+          <div class="c-code-entry">
+            <div class="c-digit active-digit" id="cd0"></div>
+            <div class="c-digit" id="cd1"></div>
+            <div class="c-digit" id="cd2"></div>
+            <div class="c-digit" id="cd3"></div>
+            <div class="c-digit" id="cd4"></div>
+            <div class="c-digit" id="cd5"></div>
+          </div>
+          <div class="c-verify-numpad">
+            <div class="cv-btn" onclick="cvKey('1')">1</div>
+            <div class="cv-btn" onclick="cvKey('2')">2</div>
+            <div class="cv-btn" onclick="cvKey('3')">3</div>
+            <div class="cv-btn" onclick="cvKey('4')">4</div>
+            <div class="cv-btn" onclick="cvKey('5')">5</div>
+            <div class="cv-btn" onclick="cvKey('6')">6</div>
+            <div class="cv-btn" onclick="cvKey('7')">7</div>
+            <div class="cv-btn" onclick="cvKey('8')">8</div>
+            <div class="cv-btn" onclick="cvKey('9')">9</div>
+            <div class="cv-btn empty-v"></div>
+            <div class="cv-btn" onclick="cvKey('0')">0</div>
+            <div class="cv-btn del-v" onclick="cvDel()">⌫</div>
+          </div>
+          <button class="c-verify-btn" id="c-verify-btn" onclick="verifyCode()" disabled>Verify Code →</button>
+        </div>
+
+        <div class="c-result valid"   id="c-result-valid"   style="display:none;">
+          <div class="c-result-icon">✅</div>
+          <div class="c-result-title">Valid — Allow Boarding</div>
+          <div class="c-result-detail">
+            <div class="c-rd-item"><div class="c-rd-key">Passenger</div><div class="c-rd-val" id="cr-passenger">—</div></div>
+            <div class="c-rd-item"><div class="c-rd-key">Route</div><div class="c-rd-val" id="cr-route">—</div></div>
+            <div class="c-rd-item"><div class="c-rd-key">From</div><div class="c-rd-val" id="cr-from">—</div></div>
+            <div class="c-rd-item"><div class="c-rd-key">To</div><div class="c-rd-val" id="cr-to">—</div></div>
+            <div class="c-rd-item"><div class="c-rd-key">Seat</div><div class="c-rd-val" id="cr-seat">—</div></div>
+            <div class="c-rd-item"><div class="c-rd-key">Fare Paid</div><div class="c-rd-val" id="cr-fare">—</div></div>
+          </div>
+        </div>
+        <div class="c-result invalid" id="c-result-invalid" style="display:none;">
+          <div class="c-result-icon">❌</div>
+          <div class="c-result-title">Invalid or Expired Code</div>
+          <div style="font-size:0.78rem;color:var(--text-muted);">Code not found. Ask passenger to pay again.</div>
+        </div>
+      </div>
+
+      <!-- TAB: BOARDING LOG -->
+      <div class="c-tab" id="ctab-log">
+        <div class="c-section-title" style="display:flex;justify-content:space-between;align-items:center;">
+          Boarding Log
+          <span class="c-log-count" id="c-log-count">0 scans</span>
+        </div>
+        <div id="c-log-list">
+          <div class="c-log-empty" id="c-log-empty">No verifications yet</div>
+        </div>
+      </div>
+
+    </div><!-- end c-screen-profile -->
+
+  </div>
+</div>
 
 <script>
     // ── State ──
@@ -1078,11 +2143,354 @@
         toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
     }
 
+
+    // ── Ticket Flow ──
+    const ticketRoutes = [
+        { from: 'City Market', to: 'Chilenje',  bus: 'Bus 14A', seat: 'Seat 07', time: '14:30', fare: '12.00' },
+        { from: 'Lusaka CBD',  to: 'Matero',    bus: 'Bus 22B', seat: 'Seat 12', time: '15:05', fare: '8.00'  },
+        { from: 'Kalingalinga',to: 'Kabulonga', bus: 'Bus 08C', seat: 'Seat 03', time: '14:45', fare: '15.00' },
+        { from: 'Northmead',   to: 'Chelstone', bus: 'Bus 31D', seat: 'Seat 09', time: '14:55', fare: '10.00' },
+    ];
+
+    let currentTicket = null;
+    let selectedMomo  = 'airtel';
+    let codeTimer     = null;
+    let codeSeconds   = 1800; // 30 min
+
+    function openTicketScanner() {
+        resetTicketModal();
+        document.getElementById('ticket-modal').classList.add('open');
+    }
+
+    function resetTicketModal() {
+        document.querySelectorAll('.ticket-step').forEach(s => s.classList.remove('active'));
+        document.getElementById('step-scan').classList.add('active');
+        selectedMomo = 'airtel';
+        document.querySelectorAll('.momo-option').forEach(o => o.classList.remove('selected'));
+        document.getElementById('momo-airtel').classList.add('selected');
+        document.getElementById('phone-field').style.display = 'block';
+        document.getElementById('phone-input').value = '';
+        if (codeTimer) { clearInterval(codeTimer); codeTimer = null; }
+    }
+
+    function handleTicketModalClick(e) {
+        if (e.target === document.getElementById('ticket-modal')) closeTicketModal();
+    }
+
+    function closeTicketModal() {
+        document.getElementById('ticket-modal').classList.remove('open');
+        if (codeTimer) { clearInterval(codeTimer); codeTimer = null; }
+    }
+
+    function simulateScan() {
+        // pick a random route
+        currentTicket = ticketRoutes[Math.floor(Math.random() * ticketRoutes.length)];
+
+        // Fill ticket summary
+        document.getElementById('tc-from').textContent = currentTicket.from;
+        document.getElementById('tc-to').textContent   = currentTicket.to;
+        document.getElementById('tc-bus').textContent  = currentTicket.bus;
+        document.getElementById('tc-seat').textContent = currentTicket.seat;
+        document.getElementById('tc-time').textContent = currentTicket.time;
+        document.getElementById('tc-fare').textContent = currentTicket.fare;
+
+        showTicketStep('step-pay');
+        showToast('✓ QR Code Detected!');
+    }
+
+    function selectMomo(provider) {
+        selectedMomo = provider;
+        document.querySelectorAll('.momo-option').forEach(o => o.classList.remove('selected'));
+        document.getElementById('momo-' + provider).classList.add('selected');
+
+        if (provider === 'wallet') {
+            document.getElementById('phone-field').style.display = 'none';
+        } else {
+            document.getElementById('phone-field').style.display = 'block';
+        }
+    }
+
+    function confirmPayment() {
+        const phone = document.getElementById('phone-input').value.trim();
+        if (selectedMomo !== 'wallet' && phone.length < 9) {
+            showToast('Please enter a valid mobile number');
+            return;
+        }
+        if (selectedMomo === 'wallet' && balance < parseFloat(currentTicket.fare)) {
+            showToast('Insufficient wallet balance – please top up');
+            return;
+        }
+
+        const providerNames = { airtel: 'Airtel Money', mtn: 'MTN Money', zamtel: 'Zamtel Kwacha', wallet: 'PU Wallet' };
+        document.getElementById('processing-sub-text').textContent = 'Connecting to ' + providerNames[selectedMomo] + '…';
+        showTicketStep('step-processing');
+
+        setTimeout(() => {
+            // Deduct from wallet if wallet payment
+            if (selectedMomo === 'wallet') {
+                balance -= parseFloat(currentTicket.fare);
+                updateBalance();
+            }
+
+            // Generate 6-digit conductor code
+            const code = String(Math.floor(100000 + Math.random() * 900000));
+            document.getElementById('conductor-code-display').textContent = code;
+
+            // Register code so conductor can verify it
+            activeCodes[code] = Object.assign({}, currentTicket);
+
+            // Fill boarding info
+            document.getElementById('bc-from').textContent  = currentTicket.from;
+            document.getElementById('bc-to').textContent    = currentTicket.to;
+            document.getElementById('bc-bus').textContent   = currentTicket.bus;
+            document.getElementById('bc-fare').textContent  = 'K ' + currentTicket.fare;
+
+            // Start 30-min expiry countdown
+            codeSeconds = 1800;
+            updateCodeTimer();
+            codeTimer = setInterval(() => {
+                codeSeconds--;
+                if (codeSeconds <= 0) {
+                    clearInterval(codeTimer);
+                    document.getElementById('code-expires-txt').textContent = 'Code Expired';
+                    return;
+                }
+                updateCodeTimer();
+            }, 1000);
+
+            showTicketStep('step-code');
+        }, 2400);
+    }
+
+    function updateCodeTimer() {
+        const m = Math.floor(codeSeconds / 60).toString().padStart(2, '0');
+        const s = (codeSeconds % 60).toString().padStart(2, '0');
+        document.getElementById('code-expires-txt').textContent = 'Expires in ' + m + ':' + s;
+    }
+
+    function showTicketStep(stepId) {
+        document.querySelectorAll('.ticket-step').forEach(s => s.classList.remove('active'));
+        document.getElementById(stepId).classList.add('active');
+    }
+
+    // ══ CONDUCTOR PORTAL ══
+    const conductorAccounts = [
+        { id:'CD-047', pin:'1234', name:'John Banda',   route:'Bus 14A', zone:'City Zone',    shift:'Morning',   phone:'+260 97 411 0047', vehicle:'ZM 4721 AB', license:'PSV-2019-047', joined:'Mar 2019', rating:'4.9', initials:'JB' },
+        { id:'CD-012', pin:'5678', name:'Mary Phiri',   route:'Bus 22B', zone:'North Zone',   shift:'Afternoon', phone:'+260 96 200 0012', vehicle:'ZM 3310 CD', license:'PSV-2020-012', joined:'Jan 2020', rating:'4.8', initials:'MP' },
+        { id:'CD-099', pin:'0000', name:'Peter Mwale',  route:'Bus 08C', zone:'East Zone',    shift:'Evening',   phone:'+260 95 300 0099', vehicle:'ZM 5588 EF', license:'PSV-2018-099', joined:'Jun 2018', rating:'4.7', initials:'PM' },
+        { id:'CD-031', pin:'9999', name:'Grace Tembo',  route:'Bus 31D', zone:'South Zone',   shift:'Morning',   phone:'+260 97 500 0031', vehicle:'ZM 1122 GH', license:'PSV-2021-031', joined:'Sep 2021', rating:'5.0', initials:'GT' },
+    ];
+
+    let cPin = '', conductorProfile = null;
+    let cVerified = 0, cRejected = 0, cRevenue = 0;
+    let cvCode = '';
+    let activeCodes = {};
+
+    // ── Login ──
+    function openConductorPortal() {
+        cPin = ''; renderCPin();
+        document.getElementById('c-staff-id').value = '';
+        document.getElementById('c-login-btn').disabled = true;
+        cShowScreen('c-screen-login');
+        document.getElementById('conductor-portal').classList.add('open');
+    }
+    function closeConductorPortal() {
+        document.getElementById('conductor-portal').classList.remove('open');
+    }
+    function cShowScreen(id) {
+        document.querySelectorAll('.c-screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+    function cPinKey(d) {
+        if (cPin.length >= 4) return;
+        cPin += d; renderCPin(); checkLoginReady();
+    }
+    function cPinDel() {
+        cPin = cPin.slice(0,-1); renderCPin(); checkLoginReady();
+    }
+    function renderCPin() {
+        for (let i = 0; i < 4; i++) {
+            const el = document.getElementById('cpd'+i);
+            if (i < cPin.length) { el.textContent='●'; el.classList.add('filled'); }
+            else { el.textContent='–'; el.classList.remove('filled'); }
+        }
+    }
+    function checkLoginReady() {
+        const id = document.getElementById('c-staff-id').value.trim();
+        document.getElementById('c-login-btn').disabled = !(id.length >= 2 && cPin.length === 4);
+    }
+    function conductorLogin() {
+        const inputId  = document.getElementById('c-staff-id').value.trim();
+        const inputPin = cPin;
+        const match = conductorAccounts.find(a => a.id.toLowerCase()===inputId.toLowerCase() && a.pin===inputPin);
+        if (match) {
+            conductorProfile = match;
+        } else if (inputId.length >= 2 && inputPin.length === 4) {
+            conductorProfile = { id:inputId, pin:inputPin, name:inputId, route:'All Routes', zone:'General', shift:'All Day', phone:'N/A', vehicle:'N/A', license:'N/A', joined:'Today', rating:'—', initials:inputId.slice(0,2).toUpperCase() };
+        } else {
+            showToast('Invalid credentials'); return;
+        }
+        cVerified=0; cRejected=0; cRevenue=0; cvCode='';
+        renderCvDigits();
+        document.getElementById('c-result-valid').style.display='none';
+        document.getElementById('c-result-invalid').style.display='none';
+        document.getElementById('c-log-list').innerHTML='<div class="c-log-empty" id="c-log-empty">No verifications yet</div>';
+        updateCStats();
+        populateConductorProfile();
+        cShowScreen('c-screen-profile');
+        cShowTab('profile');
+    }
+    function conductorLogout() {
+        cPin=''; renderCPin();
+        document.getElementById('c-staff-id').value='';
+        document.getElementById('c-login-btn').disabled=true;
+        cShowScreen('c-screen-login');
+    }
+
+    // ── Profile population ──
+    function populateConductorProfile() {
+        const p = conductorProfile;
+        document.getElementById('cp-avatar-circle').textContent = p.initials;
+        document.getElementById('cp-fullname').textContent = p.name;
+        document.getElementById('cp-staffid').textContent  = p.id;
+        document.getElementById('cp-route').textContent    = p.route;
+        document.getElementById('cp-zone').textContent     = p.zone;
+        document.getElementById('cp-shift').textContent    = p.shift;
+        document.getElementById('cp-rating').textContent   = p.rating;
+        document.getElementById('cp-name2').textContent    = p.name;
+        document.getElementById('cp-id2').textContent      = p.id;
+        document.getElementById('cp-phone').textContent    = p.phone;
+        document.getElementById('cp-vehicle').textContent  = p.vehicle;
+        document.getElementById('cp-license').textContent  = p.license;
+        document.getElementById('cp-joined').textContent   = p.joined;
+        const sel = document.getElementById('bc-route-sel');
+        for (let i=0; i<sel.options.length; i++) {
+            if (sel.options[i].value.startsWith(p.route)) { sel.selectedIndex=i; break; }
+        }
+        bcRouteChanged();
+    }
+
+    // ── Tab navigation ──
+    function cShowTab(tab) {
+        document.querySelectorAll('.c-tab').forEach(t=>t.classList.remove('active'));
+        document.querySelectorAll('.c-tab-pill').forEach(t=>t.classList.remove('active'));
+        document.getElementById('ctab-'+tab).classList.add('active');
+        document.querySelectorAll('.c-tab-pill').forEach(t=>{
+            if(t.getAttribute('onclick') && t.getAttribute('onclick').includes("'"+tab+"'")) t.classList.add('active');
+        });
+    }
+
+    // ── Barcode Generator ──
+    function bcRouteChanged() {
+        const parts = document.getElementById('bc-route-sel').value.split('|');
+        document.getElementById('bc-fare').value = parts[3]||'12.00';
+    }
+    function generateBarcode() {
+        const parts  = document.getElementById('bc-route-sel').value.split('|');
+        const bus=parts[0], from=parts[1], to=parts[2];
+        const fare   = document.getElementById('bc-fare').value || parts[3];
+        const time   = document.getElementById('bc-time').value || '14:30';
+        const seat   = document.getElementById('bc-seat').value || '1';
+        const seq    = String(Math.floor(100000+Math.random()*900000));
+        const busCode= bus.replace('Bus ','').replace(' ','');
+        const barcodeVal = 'PU-'+seq+'-'+busCode;
+        const today  = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+
+        activeCodes[seq] = { from, to, bus, seat:'Seat '+seat, time, fare };
+
+        document.getElementById('bc-display-route').textContent = bus;
+        document.getElementById('bc-display-trip').textContent  = from+' \u2192 '+to;
+        document.getElementById('bc-display-fare').textContent  = 'K '+parseFloat(fare).toFixed(2);
+        document.getElementById('bc-display-time').textContent  = time;
+        document.getElementById('bc-code-txt').textContent      = barcodeVal;
+        document.getElementById('bc-meta-seat').textContent     = 'Seat '+seat;
+        document.getElementById('bc-meta-conductor').textContent= 'Conductor: '+conductorProfile.name;
+        document.getElementById('bc-meta-date').textContent     = today;
+
+        try {
+            JsBarcode('#bc-svg', barcodeVal, {
+                format:'CODE128', width:2.2, height:80,
+                displayValue:false, background:'#ffffff',
+                lineColor:'#111111', margin:0
+            });
+        } catch(e) {
+            const svg=document.getElementById('bc-svg');
+            svg.setAttribute('viewBox','0 0 300 80');
+            svg.innerHTML='<rect width="300" height="80" fill="#eee"/><text x="50%" y="50%" text-anchor="middle" fill="#333" font-size="12">'+barcodeVal+'</text>';
+        }
+
+        document.getElementById('c-bc-card').style.display='block';
+        showToast('\u2713 Barcode generated for '+bus);
+    }
+    function regenerateBarcode() {
+        document.getElementById('bc-seat').value = String(Math.floor(Math.random()*50)+1);
+        generateBarcode();
+    }
+
+    // ── Code Verifier ──
+    function cvKey(d) {
+        if (cvCode.length >= 6) return;
+        cvCode += d; renderCvDigits();
+        document.getElementById('c-verify-btn').disabled = cvCode.length < 6;
+    }
+    function cvDel() {
+        cvCode = cvCode.slice(0,-1); renderCvDigits();
+        document.getElementById('c-verify-btn').disabled = cvCode.length < 6;
+        document.getElementById('c-result-valid').style.display='none';
+        document.getElementById('c-result-invalid').style.display='none';
+    }
+    function renderCvDigits() {
+        for (let i=0; i<6; i++) {
+            const el=document.getElementById('cd'+i);
+            if (i<cvCode.length) { el.textContent=cvCode[i]; el.classList.add('filled-digit'); el.classList.remove('active-digit'); }
+            else { el.textContent=''; el.classList.remove('filled-digit'); el.classList.toggle('active-digit',i===cvCode.length); }
+        }
+    }
+    function verifyCode() {
+        const data=activeCodes[cvCode];
+        document.getElementById('c-result-valid').style.display='none';
+        document.getElementById('c-result-invalid').style.display='none';
+        const names=['M. Banda','P. Mwale','A. Tembo','G. Phiri','F. Zulu','T. Mulenga'];
+        if (data) {
+            document.getElementById('cr-passenger').textContent=names[Math.floor(Math.random()*names.length)];
+            document.getElementById('cr-route').textContent=data.bus;
+            document.getElementById('cr-from').textContent=data.from;
+            document.getElementById('cr-to').textContent=data.to;
+            document.getElementById('cr-seat').textContent=data.seat;
+            document.getElementById('cr-fare').textContent='K '+data.fare;
+            document.getElementById('c-result-valid').style.display='block';
+            cVerified++; cRevenue+=parseFloat(data.fare);
+            addLogEntry(cvCode,data.from+' \u2192 '+data.to,'ok');
+            delete activeCodes[cvCode];
+        } else {
+            document.getElementById('c-result-invalid').style.display='block';
+            cRejected++; addLogEntry(cvCode,'Unknown','bad');
+        }
+        updateCStats();
+        setTimeout(()=>{ cvCode=''; renderCvDigits(); document.getElementById('c-verify-btn').disabled=true; },3500);
+    }
+    function addLogEntry(code,route,status) {
+        const empty=document.getElementById('c-log-empty'); if(empty) empty.remove();
+        const list=document.getElementById('c-log-list');
+        const item=document.createElement('div'); item.className='c-log-item';
+        item.innerHTML=`<div class="c-log-dot ${status}"></div><div class="c-log-code">${code}</div><div class="c-log-route">${route}</div><div class="c-log-status ${status}">${status==='ok'?'Boarded':'Rejected'}</div>`;
+        list.prepend(item);
+        const total=cVerified+cRejected;
+        document.getElementById('c-log-count').textContent=total+' scan'+(total!==1?'s':'');
+    }
+    function updateCStats() {
+        document.getElementById('css-verified').textContent=cVerified;
+        document.getElementById('css-rejected').textContent=cRejected;
+        document.getElementById('css-revenue').textContent='K '+cRevenue.toFixed(0);
+    }
+
+
     // ── Init ──
     window.onload = () => {
         updateBalance();
-        console.log('Project Unified · Ready');
+        document.getElementById('c-staff-id').addEventListener('input', checkLoginReady);
     };
+
 </script>
 </body>
 </html>
