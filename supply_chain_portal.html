@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Unified</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #F0C040;
+            --gold-light: #F7DC80;
+            --gold-dark: #C49B1A;
+            --ink: #0D1117;
+            --ink-soft: #1A2232;
+            --surface: #141B27;
+            --surface-raised: #1E2B3C;
+            --surface-high: #253447;
+            --text-primary: #EDF2F7;
+            --text-muted: #7A90A8;
+            --text-dim: #4A607A;
+            --accent-teal: #2DD4BF;
+            --accent-orange: #F97316;
+            --success: #34D399;
+            --radius: 16px;
+            --radius-sm: 10px;
+            --radius-xs: 6px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #060B14;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .app-shell {
+            width: 100%;
+            max-width: 430px;
+            min-height: 100vh;
+            background: var(--ink);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* ── AMBIENT GLOW ── */
+        .app-shell::before {
+            content: '';
+            position: fixed;
+            top: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(240,192,64,0.18) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ── HEADER ── */
+        header {
+            padding: 28px 20px 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-mark {
+            width: 36px;
+            height: 36px;
+            background: var(--gold);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 1rem;
+            color: var(--ink);
+        }
+
+        .brand-name {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--text-primary);
+            letter-spacing: 0.05em;
+        }
+        .brand-name span { color: var(--gold); }
+
+        .notif-btn {
+            width: 38px;
+            height: 38px;
+            background: var(--surface-raised);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            font-size: 1.1rem;
+        }
+
+        .notif-dot {
+            position: absolute;
+            top: 6px; right: 6px;
+            width: 8px; height: 8px;
+            background: var(--gold);
+            border-radius: 50%;
+            border: 2px solid var(--ink);
+        }
+
+        /* ── WALLET CARD ── */
+        .wallet-card {
+            background: linear-gradient(135deg, #1E3A5F 0%, #0D2340 60%, #1A2E50 100%);
+            border-radius: var(--radius);
+            padding: 22px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(240,192,64,0.15);
+        }
+
+        .wallet-card::after {
+            content: '';
+            position: absolute;
+            top: -40px; right: -40px;
+            width: 160px; height: 160px;
+            background: radial-gradient(circle, rgba(240,192,64,0.12) 0%, transparent 70%);
+        }
+
+        .wallet-card::before {
+            content: '';
+            position: absolute;
+            bottom: -30px; left: -20px;
+            width: 120px; height: 120px;
+            background: radial-gradient(circle, rgba(45,212,191,0.08) 0%, transparent 70%);
+        }
+
+        .wallet-label {
+            font-size: 0.72rem;
+            font-weight: 500;
+            letter-spacing: 0.12em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .wallet-balance {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 2.4rem;
+            color: var(--text-primary);
+            line-height: 1;
+            margin-bottom: 18px;
+        }
+        .wallet-balance sup {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--gold);
+            vertical-align: top;
+            margin-top: 6px;
+            display: inline-block;
+            margin-right: 3px;
+        }
+
+        .wallet-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .wallet-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.78rem;
+            color: var(--success);
+        }
+
+        .wallet-status-dot {
+            width: 7px; height: 7px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(0.8); }
+        }
+
+        .topup-btn {
+            background: var(--gold);
+            color: var(--ink);
+            border: none;
+            padding: 9px 18px;
+            border-radius: 30px;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .topup-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 0 20px rgba(240,192,64,0.4);
+        }
+
+        /* ── NAVIGATION ── */
+        nav {
+            display: flex;
+            padding: 12px 16px;
+            gap: 6px;
+            background: var(--ink);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .tab-btn {
+            flex: 1;
+            border: none;
+            padding: 10px 4px;
+            cursor: pointer;
+            background: none;
+            font-family: 'Syne', sans-serif;
+            font-weight: 600;
+            font-size: 0.68rem;
+            color: var(--text-dim);
+            letter-spacing: 0.06em;
+            transition: color 0.2s;
+            border-radius: var(--radius-xs);
+            position: relative;
+        }
+
+        .tab-btn.active {
+            color: var(--ink);
+            background: var(--gold);
+        }
+
+        /* ── MAIN CONTENT ── */
+        main { flex: 1; }
+
+        .page { display: none; padding: 20px; animation: fadeUp 0.3s ease; }
+        .page.active { display: block; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        .section-title {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: var(--text-primary);
+        }
+
+        .section-chip {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 20px;
+            background: rgba(240,192,64,0.12);
+            color: var(--gold);
+            border: 1px solid rgba(240,192,64,0.2);
+        }
+
+        /* ── QUICK ACTIONS GRID ── */
+        .quick-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .quick-card {
+            background: var(--surface);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: var(--radius);
+            padding: 18px 14px;
+            cursor: pointer;
+            transition: transform 0.18s, border-color 0.18s, background 0.18s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quick-card:active { transform: scale(0.96); }
+
+        .quick-card:hover {
+            border-color: rgba(240,192,64,0.3);
+            background: var(--surface-raised);
+        }
+
+        .quick-card-icon {
+            font-size: 1.6rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .quick-card-label {
+            font-family: 'Syne', sans-serif;
+            font-weight: 600;
+            font-size: 0.82rem;
+            color: var(--text-primary);
+        }
+
+        .quick-card-sub {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .quick-card-arrow {
+            position: absolute;
+            bottom: 12px;
+            right: 14px;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        /* ── ALERT BANNER ── */
+        .info-banner {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            background: rgba(45,212,191,0.07);
+            border: 1px solid rgba(45,212,191,0.18);
+            border-radius: var(--radius-sm);
+            margin-bottom: 16px;
+        }
+
+        .info-banner-icon { font-size: 1.2rem; }
+
+        .info-banner-text {
+            font-size: 0.8rem;
+            color: var(--accent-teal);
+            font-weight: 500;
+            flex: 1;
+        }
+
+        /* ── ACTION ROWS ── */
+        .action-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px;
+            background: var(--surface);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: background 0.18s, border-color 0.18s, transform 0.15s;
+            margin-bottom: 10px;
+        }
+
+        .action-row:active { transform: scale(0.98); }
+
+        .action-row:hover {
+            background: var(--surface-raised);
+            border-color: rgba(240,192,64,0.2);
+        }
+
+        .action-icon-wrap {
+            width: 42px; height: 42px;
+            border-radius: var(--radius-xs);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .action-icon-wrap.gold { background: rgba(240,192,64,0.12); }
+        .action-icon-wrap.teal { background: rgba(45,212,191,0.10); }
+        .action-icon-wrap.orange { background: rgba(249,115,22,0.10); }
+
+        .action-text { flex: 1; }
+        .action-label {
+            font-family: 'Syne', sans-serif;
+            font-weight: 600;
+            font-size: 0.88rem;
+            color: var(--text-primary);
+        }
+        .action-desc {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .action-badge {
+            font-size: 0.68rem;
+            font-weight: 600;
+            padding: 3px 9px;
+            border-radius: 20px;
+        }
+
+        .badge-gold {
+            background: rgba(240,192,64,0.15);
+            color: var(--gold);
+            border: 1px solid rgba(240,192,64,0.25);
+        }
+
+        .badge-promo {
+            background: rgba(249,115,22,0.15);
+            color: var(--accent-orange);
+            border: 1px solid rgba(249,115,22,0.25);
+        }
+
+        .badge-new {
+            background: rgba(52,211,153,0.15);
+            color: var(--success);
+            border: 1px solid rgba(52,211,153,0.25);
+        }
+
+        .action-chevron {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        /* ── TRY COUNTER ── */
+        .tries-card {
+            background: linear-gradient(135deg, rgba(240,192,64,0.08), rgba(240,192,64,0.03));
+            border: 1px solid rgba(240,192,64,0.18);
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        .tries-counter {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 2rem;
+            color: var(--gold);
+            line-height: 1;
+        }
+
+        .tries-info { flex: 1; }
+        .tries-label {
+            font-family: 'Syne', sans-serif;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+        }
+        .tries-sub {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .tries-dots {
+            display: flex;
+            gap: 5px;
+        }
+
+        .tries-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: var(--gold);
+            transition: background 0.3s;
+        }
+
+        .tries-dot.used { background: var(--surface-high); }
+
+        /* ── FOOTER NOTE ── */
+        .footer-note {
+            font-size: 0.72rem;
+            color: var(--text-dim);
+            text-align: center;
+            padding: 20px 20px 30px;
+            line-height: 1.6;
+        }
+        .footer-note strong { color: var(--text-muted); }
+
+        /* ── MODAL OVERLAY ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.75);
+            z-index: 200;
+            justify-content: center;
+            align-items: flex-end;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.open { display: flex; }
+
+        .modal-sheet {
+            background: var(--surface);
+            border-radius: 24px 24px 0 0;
+            padding: 30px 24px;
+            width: 100%;
+            max-width: 430px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-handle {
+            width: 40px; height: 4px;
+            background: var(--surface-high);
+            border-radius: 2px;
+            margin: 0 auto 20px;
+        }
+
+        .modal-title {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            margin-bottom: 18px;
+        }
+
+        .modal-input {
+            width: 100%;
+            background: var(--ink);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+            font-family: 'Syne', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 14px;
+            outline: none;
+            text-align: center;
+            transition: border-color 0.2s;
+        }
+
+        .modal-input:focus { border-color: var(--gold); }
+
+        .modal-input::placeholder { color: var(--text-dim); }
+
+        .quick-amounts {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 18px;
+        }
+
+        .amount-chip {
+            padding: 9px 4px;
+            background: var(--surface-raised);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: var(--radius-xs);
+            font-family: 'Syne', sans-serif;
+            font-weight: 600;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s;
+        }
+
+        .amount-chip:hover, .amount-chip.selected {
+            background: rgba(240,192,64,0.12);
+            color: var(--gold);
+            border-color: rgba(240,192,64,0.3);
+        }
+
+        .modal-confirm-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--gold);
+            color: var(--ink);
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .modal-confirm-btn:active {
+            transform: scale(0.97);
+            box-shadow: 0 0 24px rgba(240,192,64,0.35);
+        }
+
+        .modal-cancel {
+            display: block;
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 0.82rem;
+            margin-top: 12px;
+            cursor: pointer;
+        }
+
+        /* ── TOAST ── */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: var(--surface-high);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-primary);
+            padding: 12px 22px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            z-index: 300;
+            transition: transform 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        /* ── STATS ROW ── */
+        .stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            background: var(--surface);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: var(--radius-sm);
+            padding: 14px 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: var(--text-primary);
+        }
+
+        .stat-label {
+            font-size: 0.65rem;
+            color: var(--text-dim);
+            margin-top: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-shell">
+    <!-- Ambient glow handled by CSS -->
+
+    <!-- HEADER -->
+    <header>
+        <div class="header-top">
+            <div class="brand">
+                <div class="brand-mark">PU</div>
+                <div class="brand-name">PROJECT <span>UNIFIED</span></div>
+            </div>
+            <div class="notif-btn" onclick="showToast('No new notifications')">
+                🔔
+                <div class="notif-dot"></div>
+            </div>
+        </div>
+
+        <div class="wallet-card">
+            <div class="wallet-label">Reflecting Balance</div>
+            <div class="wallet-balance">
+                <sup>K</sup><span id="balance-display">0.00</span>
+            </div>
+            <div class="wallet-footer">
+                <div class="wallet-status">
+                    <div class="wallet-status-dot"></div>
+                    Active Wallet
+                </div>
+                <button class="topup-btn" onclick="openTopUp()">+ Top Up</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- NAVIGATION -->
+    <nav>
+        <button class="tab-btn active" onclick="showPage('home', this)">HOME</button>
+        <button class="tab-btn" onclick="showPage('auto', this)">TRANSPORT</button>
+        <button class="tab-btn" onclick="showPage('jobs', this)">JOBS</button>
+        <button class="tab-btn" onclick="showPage('logistics', this)">CARGO</button>
+    </nav>
+
+    <!-- PAGES -->
+    <main>
+
+        <!-- HOME -->
+        <section id="home" class="page active">
+            <div class="info-banner">
+                <span class="info-banner-icon">📶</span>
+                <span class="info-banner-text">Free Wi-Fi Active · City Market Zone</span>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-box">
+                    <div class="stat-value" style="color: var(--gold)">12</div>
+                    <div class="stat-label">Vendors</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" style="color: var(--accent-teal)">4</div>
+                    <div class="stat-label">Active Jobs</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" style="color: var(--success)">98%</div>
+                    <div class="stat-label">Uptime</div>
+                </div>
+            </div>
+
+            <div class="section-header">
+                <span class="section-title">Quick Services</span>
+            </div>
+
+            <div class="quick-grid">
+                <div class="quick-card" onclick="showPage('auto', document.querySelectorAll('.tab-btn')[1])">
+                    <span class="quick-card-icon">🚌</span>
+                    <div class="quick-card-label">Bus Ticket</div>
+                    <div class="quick-card-sub">Scan or book</div>
+                    <span class="quick-card-arrow">→</span>
+                </div>
+                <div class="quick-card" onclick="showPage('jobs', document.querySelectorAll('.tab-btn')[2])">
+                    <span class="quick-card-icon">💼</span>
+                    <div class="quick-card-label">Find Jobs</div>
+                    <div class="quick-card-sub">3 tries free</div>
+                    <span class="quick-card-arrow">→</span>
+                </div>
+                <div class="quick-card" onclick="showPage('auto', document.querySelectorAll('.tab-btn')[1])">
+                    <span class="quick-card-icon">🔧</span>
+                    <div class="quick-card-label">Mechanic</div>
+                    <div class="quick-card-sub">Vetted pros</div>
+                    <span class="quick-card-arrow">→</span>
+                </div>
+                <div class="quick-card" onclick="showPage('support', null)">
+                    <span class="quick-card-icon">🛡️</span>
+                    <div class="quick-card-label">Support</div>
+                    <div class="quick-card-sub">Trust & safety</div>
+                    <span class="quick-card-arrow">→</span>
+                </div>
+            </div>
+
+            <div class="section-header">
+                <span class="section-title">Recent Activity</span>
+            </div>
+
+            <div class="action-row" style="cursor: default;">
+                <div class="action-icon-wrap teal">✅</div>
+                <div class="action-text">
+                    <div class="action-label">Wallet Verified</div>
+                    <div class="action-desc">Identity confirmed · Today</div>
+                </div>
+                <span class="action-badge badge-new">Done</span>
+            </div>
+            <div class="action-row" style="cursor: default;">
+                <div class="action-icon-wrap gold">🎯</div>
+                <div class="action-text">
+                    <div class="action-label">Profile Setup Complete</div>
+                    <div class="action-desc">Ambassador tier available</div>
+                </div>
+                <span class="action-badge badge-gold">New</span>
+            </div>
+        </section>
+
+        <!-- AUTORELIEF / TRANSPORT -->
+        <section id="auto" class="page">
+            <div class="section-header">
+                <span class="section-title">AutoRelief Transport</span>
+                <span class="section-chip">4 Services</span>
+            </div>
+
+            <div class="action-row" onclick="showToast('Opening QR Scanner…')">
+                <div class="action-icon-wrap gold">🎫</div>
+                <div class="action-text">
+                    <div class="action-label">Scan Bus Ticket</div>
+                    <div class="action-desc">Use camera to validate boarding pass</div>
+                </div>
+                <span class="action-chevron">›</span>
+            </div>
+
+            <div class="action-row" onclick="showToast('Locating nearest fuel delivery…')">
+                <div class="action-icon-wrap orange">⛽</div>
+                <div class="action-text">
+                    <div class="action-label">On-Demand Fuel</div>
+                    <div class="action-desc">Delivery to your location via GPS</div>
+                </div>
+                <span class="action-chevron">›</span>
+            </div>
+
+            <div class="action-row" onclick="showToast('Connecting to a verified mechanic…')">
+                <div class="action-icon-wrap teal">🔧</div>
+                <div class="action-text">
+                    <div class="action-label">Verified Mechanics</div>
+                    <div class="action-desc">Background-checked, rated pros</div>
+                </div>
+                <span class="action-chevron">›</span>
+            </div>
+
+            <div class="action-row" onclick="showToast('Swap & Insurance feature launching Phase 4')">
+                <div class="action-icon-wrap gold">🔄</div>
+                <div class="action-text">
+                    <div class="action-label">Swap & Insurance</div>
+                    <div class="action-desc">Battery swap + maintenance cover</div>
+                </div>
+                <span class="action-badge badge-gold">Phase 4</span>
+            </div>
+        </section>
+
+        <!-- JOB CONNECT -->
+        <section id="jobs" class="page">
+            <div class="section-header">
+                <span class="section-title">Job Connect</span>
+                <span class="section-chip">Active</span>
+            </div>
+
+            <div class="tries-card">
+                <div>
+                    <div class="tries-counter" id="tries-display">3</div>
+                    <div style="font-size:0.62rem; color: var(--text-dim); margin-top: 2px;">REMAINING</div>
+                </div>
+                <div class="action-text">
+                    <div class="tries-label">Free Applications</div>
+                    <div class="tries-sub">Upgrade for K200 · 5 additional tries</div>
+                    <div class="tries-dots" id="tries-dots" style="margin-top: 8px;">
+                        <div class="tries-dot"></div>
+                        <div class="tries-dot"></div>
+                        <div class="tries-dot"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-row" onclick="useTry()">
+                <div class="action-icon-wrap gold">📝</div>
+                <div class="action-text">
+                    <div class="action-label">Apply for New Role</div>
+                    <div class="action-desc">Submit application + generate documents</div>
+                </div>
+                <span class="action-chevron">›</span>
+            </div>
+
+            <div class="action-row" onclick="showToast('Guaranteed Interview Portal opening…')">
+                <div class="action-icon-wrap teal">🤝</div>
+                <div class="action-text">
+                    <div class="action-label">Guaranteed Interview</div>
+                    <div class="action-desc">Employer-backed interview slots</div>
+                </div>
+                <span class="action-badge badge-new">Hot</span>
+            </div>
+
+            <div class="action-row" onclick="showToast('Opening Vendor Directory…')">
+                <div class="action-icon-wrap orange">📋</div>
+                <div class="action-text">
+                    <div class="action-label">Vendor Directory</div>
+                    <div class="action-desc">12 categories of trusted employers</div>
+                </div>
+                <span class="action-chevron">›</span>
+            </div>
+        </section>
+
+        <!-- LOGISTICS -->
+        <section id="logistics" class="page">
+            <div class="section-header">
+                <span class="section-title">Industrial Logistics</span>
+                <span class="section-chip">Cargo</span>
+            </div>
+
+            <div class="action-row" onclick="showToast('GPS pickup scheduler opening…')">
+                <div class="action-icon-wrap gold">📍</div>
+                <div class="action-text">
+                    <div class="action-label">Schedule Pickup</div>
+                    <div class="action-desc">Enter GPS coords or postcode</div>
+                </div>
+                <span class="action-chevron">›</span>
+            </div>
+
+            <div class="action-row" onclick="showToast('Route planner loading…')">
+                <div class="action-icon-wrap teal">🚛</div>
+                <div class="action-text">
+                    <div class="action-label">Vendor–Manufacturer Route</div>
+                    <div class="action-desc">Optimised delivery pathfinding</div>
+                </div>
+                <span class="action-chevron">›</span>
+            </div>
+
+            <div class="action-row" onclick="showToast('Promo credits applied to account!')">
+                <div class="action-icon-wrap orange">🎁</div>
+                <div class="action-text">
+                    <div class="action-label">Delivery Support Credits</div>
+                    <div class="action-desc">Promotional credits for bulk shipments</div>
+                </div>
+                <span class="action-badge badge-promo">PROMO</span>
+            </div>
+        </section>
+
+        <!-- SUPPORT (hidden, accessible via quick-card) -->
+        <section id="support" class="page">
+            <div class="section-header">
+                <span class="section-title">Trust & Security</span>
+            </div>
+
+            <div class="action-row" onclick="showToast('Opening Document Vault…')">
+                <div class="action-icon-wrap teal">📄</div>
+                <div class="action-text">
+                    <div class="action-label">Digital Document Vault</div>
+                    <div class="action-desc">Secure encrypted storage</div>
+                </div>
+                <span class="action-chevron">›</span>
+            </div>
+
+            <div class="action-row" onclick="showToast('Opening Mediation Centre…')">
+                <div class="action-icon-wrap gold">⚖️</div>
+                <div class="action-text">
+                    <div class="action-label">Mediation & Disputes</div>
+                    <div class="action-desc">Impartial arbitration service</div>
+                </div>
+                <span class="action-chevron">›</span>
+            </div>
+
+            <div class="action-row" onclick="showToast('Connecting to Yellow Vest Ambassador…')">
+                <div class="action-icon-wrap orange">👤</div>
+                <div class="action-text">
+                    <div class="action-label">Yellow Vest Ambassador</div>
+                    <div class="action-desc">Physical agent support network</div>
+                </div>
+                <span class="action-chevron">›</span>
+            </div>
+
+            <div class="footer-note">
+                Every transaction produces <strong>3 official copies</strong> for full legal transparency and dispute resolution.
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<!-- TOP-UP MODAL -->
+<div class="modal-overlay" id="topup-modal" onclick="handleModalClick(event)">
+    <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-title">Top Up Wallet</div>
+        <input type="number" class="modal-input" id="topup-input" placeholder="0.00" min="1" />
+        <div class="quick-amounts">
+            <div class="amount-chip" onclick="setAmount(50)">K 50</div>
+            <div class="amount-chip" onclick="setAmount(100)">K 100</div>
+            <div class="amount-chip" onclick="setAmount(200)">K 200</div>
+            <div class="amount-chip" onclick="setAmount(500)">K 500</div>
+        </div>
+        <button class="modal-confirm-btn" onclick="confirmTopUp()">Confirm Top Up →</button>
+        <span class="modal-cancel" onclick="closeTopUp()">Cancel</span>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+    // ── State ──
+    let balance = 0.00;
+    let tries = 3;
+
+    // ── Page Navigation ──
+    function showPage(pageId, tabEl) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+
+        const page = document.getElementById(pageId);
+        if (page) page.classList.add('active');
+        if (tabEl) tabEl.classList.add('active');
+    }
+
+    // ── Top Up Modal ──
+    function openTopUp() {
+        document.getElementById('topup-modal').classList.add('open');
+        document.getElementById('topup-input').value = '';
+        document.querySelectorAll('.amount-chip').forEach(c => c.classList.remove('selected'));
+    }
+
+    function closeTopUp() {
+        document.getElementById('topup-modal').classList.remove('open');
+    }
+
+    function handleModalClick(e) {
+        if (e.target === document.getElementById('topup-modal')) closeTopUp();
+    }
+
+    function setAmount(val) {
+        document.getElementById('topup-input').value = val;
+        document.querySelectorAll('.amount-chip').forEach(c => {
+            c.classList.toggle('selected', c.textContent.includes(val));
+        });
+    }
+
+    function confirmTopUp() {
+        const val = parseFloat(document.getElementById('topup-input').value);
+        if (!val || val <= 0) {
+            showToast('Please enter a valid amount');
+            return;
+        }
+        balance += val;
+        updateBalance();
+        closeTopUp();
+        showToast(`K ${val.toFixed(2)} added successfully ✓`);
+    }
+
+    function updateBalance() {
+        document.getElementById('balance-display').textContent = balance.toFixed(2);
+    }
+
+    // ── Job Tries ──
+    function useTry() {
+        if (tries > 0) {
+            tries--;
+            document.getElementById('tries-display').textContent = tries;
+            const dots = document.querySelectorAll('.tries-dot');
+            dots[tries].classList.add('used');
+            showToast('Application sent! Interview doc generating…');
+        } else {
+            showToast('Free tries used up — upgrade for K200');
+        }
+    }
+
+    // ── Toast ──
+    let toastTimer;
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+    }
+
+    // ── Init ──
+    window.onload = () => {
+        updateBalance();
+        console.log('Project Unified · Ready');
+    };
+</script>
+</body>
+</html>
