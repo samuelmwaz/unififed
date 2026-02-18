@@ -7,6 +7,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     <style>
         :root {
             --gold: #F0C040;
@@ -298,6 +300,41 @@
         .waybill-form-label { font-size:0.62rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-dim); margin-bottom:10px; display:block; }
         .waybill-form-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
         .waybill-form-row.full { grid-template-columns:1fr; }
+
+        /* ── LIVE LOCATION MODAL ── */
+        .live-modal { position:fixed; inset:0; z-index:1000; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; pointer-events:none; opacity:0; transition:opacity 0.25s; }
+        .live-modal.open { pointer-events:all; opacity:1; }
+        .live-backdrop { position:absolute; inset:0; background:rgba(6,11,20,0.88); backdrop-filter:blur(6px); }
+        .live-sheet { position:relative; z-index:2; width:100%; max-width:430px; background:var(--ink); border-radius:24px 24px 0 0; overflow:hidden; transform:translateY(60px); transition:transform 0.35s cubic-bezier(.22,1,.36,1); display:flex; flex-direction:column; height:88vh; }
+        .live-modal.open .live-sheet { transform:translateY(0); }
+        .live-handle-bar { padding:12px 0 0; display:flex; justify-content:center; flex-shrink:0; background:var(--ink); z-index:5; }
+        .live-handle { width:40px; height:4px; background:rgba(255,255,255,0.15); border-radius:2px; }
+        .live-topbar { display:flex; align-items:center; justify-content:space-between; padding:12px 16px 10px; flex-shrink:0; background:var(--ink); border-bottom:1px solid rgba(255,255,255,0.06); z-index:5; }
+        .live-title { font-family:'Syne',sans-serif; font-weight:800; font-size:0.95rem; color:var(--text-primary); }
+        .live-waybill-id { font-size:0.72rem; color:var(--gold); margin-top:1px; }
+        .live-close-btn { width:34px; height:34px; background:var(--surface-raised); border:1px solid rgba(255,255,255,0.08); border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:1rem; color:var(--text-muted); flex-shrink:0; }
+        #live-map { flex:1; width:100%; min-height:0; }
+        .live-info-bar { padding:12px 16px; background:var(--ink-soft); border-top:1px solid rgba(255,255,255,0.06); flex-shrink:0; }
+        .live-info-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:10px; }
+        .live-info-item { background:var(--surface); border-radius:10px; padding:9px 10px; border:1px solid rgba(255,255,255,0.05); }
+        .live-info-key { font-size:0.6rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:2px; }
+        .live-info-val { font-family:'Syne',sans-serif; font-weight:700; font-size:0.82rem; color:var(--text-primary); }
+        .live-pulse-row { display:flex; align-items:center; gap:8px; }
+        .live-pulse-dot { width:8px; height:8px; border-radius:50%; background:var(--success); animation:pulse 1.2s infinite; flex-shrink:0; }
+        .live-pulse-text { font-size:0.72rem; color:var(--success); }
+        .live-share-btn { margin-left:auto; background:rgba(240,192,64,0.15); border:1px solid rgba(240,192,64,0.3); border-radius:20px; padding:5px 12px; font-size:0.7rem; font-weight:700; color:var(--gold); cursor:pointer; font-family:'Syne',sans-serif; }
+
+        /* Leaflet dark override */
+        .leaflet-tile { filter: brightness(0.85) invert(1) contrast(1.05) hue-rotate(200deg) saturate(0.6) brightness(0.75); }
+        .leaflet-container { background:#0D1117; }
+        .leaflet-control-attribution { display:none; }
+        .leaflet-control-zoom a { background:var(--surface-raised) !important; color:var(--text-primary) !important; border-color:rgba(255,255,255,0.1) !important; }
+
+        /* Truck marker */
+        .truck-marker { width:36px; height:36px; background:var(--gold); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.1rem; border:3px solid var(--ink); box-shadow:0 0 0 4px rgba(240,192,64,0.35), 0 4px 12px rgba(0,0,0,0.5); animation:truckPulse 2s infinite; }
+        @keyframes truckPulse { 0%,100% { box-shadow:0 0 0 4px rgba(240,192,64,0.35),0 4px 12px rgba(0,0,0,0.5); } 50% { box-shadow:0 0 0 10px rgba(240,192,64,0.08),0 4px 12px rgba(0,0,0,0.5); } }
+        .dest-marker { width:28px; height:28px; background:var(--success); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.85rem; border:3px solid var(--ink); box-shadow:0 2px 8px rgba(0,0,0,0.4); }
+        .origin-marker { width:24px; height:24px; background:var(--text-muted); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; border:2px solid var(--ink); }
         .cargo-track-row { display: flex; align-items: center; gap: 0; margin-bottom: 16px; }
         .track-node { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
         .track-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--text-dim); background: transparent; }
@@ -782,13 +819,19 @@
             </div>
 
             <!-- Live tracking card -->
-            <div class="cargo-status-bar">
+            <div class="cargo-status-bar" style="cursor:pointer;" onclick="openLiveLocation('ZM-2847')">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
                     <div>
                         <div style="font-family:'Syne',sans-serif; font-weight:700; font-size:0.9rem; color:var(--text-primary);">Shipment #ZM-2847</div>
                         <div style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">Lusaka Industrial → Kitwe</div>
                     </div>
-                    <span class="action-badge badge-new">In Transit</span>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span class="action-badge badge-new">In Transit</span>
+                        <div style="background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.3);border-radius:20px;padding:4px 10px;font-size:0.68rem;font-weight:700;color:var(--success);font-family:'Syne',sans-serif;display:flex;align-items:center;gap:5px;">
+                            <div style="width:5px;height:5px;background:var(--success);border-radius:50%;animation:pulse 1.2s infinite;"></div>
+                            LIVE
+                        </div>
+                    </div>
                 </div>
                 <div class="cargo-track-row">
                     <div class="track-node">
@@ -811,9 +854,13 @@
                         <div class="track-label">Delivered</div>
                     </div>
                 </div>
-                <div style="font-size:0.72rem; color:var(--accent-orange); display:flex; align-items:center; gap:6px;">
+                <div style="font-size:0.72rem; color:var(--accent-orange); display:flex; align-items:center; gap:6px; margin-bottom:10px;">
                     <div style="width:6px;height:6px;background:var(--accent-orange);border-radius:50%;animation:pulse 1.5s infinite;"></div>
                     ETA: 14:30 today · 2 hrs remaining
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06);">
+                    <span style="font-size:0.7rem;color:var(--text-dim);">Tap card to view live map</span>
+                    <div style="display:flex;align-items:center;gap:5px;font-size:0.72rem;color:var(--success);font-weight:600;">📍 View on Map ›</div>
                 </div>
             </div>
 
@@ -1794,6 +1841,43 @@
     </div>
 </div>
 
+<!-- ══ LIVE LOCATION MODAL ══ -->
+<div class="live-modal" id="live-modal">
+    <div class="live-backdrop" onclick="closeLiveLocation()"></div>
+    <div class="live-sheet">
+        <div class="live-handle-bar"><div class="live-handle"></div></div>
+        <div class="live-topbar">
+            <div>
+                <div class="live-title">📍 Live Shipment Tracking</div>
+                <div class="live-waybill-id" id="live-waybill-label">ZM-2847 · Lusaka → Kitwe</div>
+            </div>
+            <div class="live-close-btn" onclick="closeLiveLocation()">✕</div>
+        </div>
+        <div id="live-map"></div>
+        <div class="live-info-bar">
+            <div class="live-info-grid">
+                <div class="live-info-item">
+                    <div class="live-info-key">Speed</div>
+                    <div class="live-info-val" id="live-speed">82 km/h</div>
+                </div>
+                <div class="live-info-item">
+                    <div class="live-info-key">Distance Left</div>
+                    <div class="live-info-val" id="live-dist">148 km</div>
+                </div>
+                <div class="live-info-item">
+                    <div class="live-info-key">ETA</div>
+                    <div class="live-info-val" id="live-eta">14:30</div>
+                </div>
+            </div>
+            <div class="live-pulse-row">
+                <div class="live-pulse-dot"></div>
+                <div class="live-pulse-text" id="live-location-text">Kabwe District · Last updated just now</div>
+                <button class="live-share-btn" onclick="shareLiveLocation()">📤 Share</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 <!-- ══════════════════════════════════════════ -->
@@ -2734,24 +2818,24 @@ function sendAmbMsg() {
 const waybillStore = [
     {
         id: 'ZM-2847', status: 'transit', color: 'orange',
-        sender: { name: 'Chanda Mwale', phone: '0977 112 344', addr: 'Lusaka Industrial Area' },
-        recipient: { name: 'Copper Belt Mfg Ltd', phone: '0212 445 678', addr: 'Kitwe Industrial Zone' },
+        sender: { name: 'Chanda Mwale', phone: '0977 112 344', nrc: '123456/78/1', addr: 'Lusaka Industrial Area' },
+        recipient: { name: 'Copper Belt Mfg Ltd', phone: '0212 445 678', nrc: 'CO-44892', addr: 'Kitwe Industrial Zone' },
         cargo: { type: 'Industrial Parts', weight: '340 kg', qty: '12 pieces', value: 'K 4,800', description: 'Copper wire spools and terminal fittings' },
         from: 'Lusaka Industrial', to: 'Kitwe',
         date: 'Feb 17, 2026', eta: 'Feb 18, 2026 · 14:30'
     },
     {
         id: 'ZM-2611', status: 'delivered', color: 'success',
-        sender: { name: 'Naledi Phiri', phone: '0966 230 889', addr: 'Chilenje Market' },
-        recipient: { name: 'Mwanza General Store', phone: '0977 556 001', addr: 'Kabwe Central' },
+        sender: { name: 'Naledi Phiri', phone: '0966 230 889', nrc: '234567/89/2', addr: 'Chilenje Market' },
+        recipient: { name: 'Mwanza General Store', phone: '0977 556 001', nrc: 'CO-11203', addr: 'Kabwe Central' },
         cargo: { type: 'General Goods', weight: '120 kg', qty: '8 boxes', value: 'K 1,200', description: 'Groceries and household goods' },
         from: 'Chilenje Market', to: 'Kabwe',
         date: 'Feb 14, 2026', eta: 'Delivered Feb 15'
     },
     {
         id: 'ZM-2790', status: 'pending', color: '',
-        sender: { name: 'Bupe Electronics', phone: '0955 778 234', addr: 'Northmead Depot' },
-        recipient: { name: 'Soko Tech Hub', phone: '0978 330 102', addr: 'Ndola Industrial' },
+        sender: { name: 'Bupe Electronics', phone: '0955 778 234', nrc: 'CO-78345', addr: 'Northmead Depot' },
+        recipient: { name: 'Soko Tech Hub', phone: '0978 330 102', nrc: 'CO-56210', addr: 'Ndola Industrial' },
         cargo: { type: 'Electronics', weight: '55 kg', qty: '4 units', value: 'K 9,500', description: 'Laptop computers and accessories' },
         from: 'Northmead Depot', to: 'Ndola',
         date: 'Feb 18, 2026', eta: 'Feb 19, 2026 · 11:00'
@@ -2801,9 +2885,9 @@ function renderReceiptsList() {
                     <div class="receipt-meta-key">${w.status === 'delivered' ? 'Delivered' : 'ETA'}</div>
                     <div class="receipt-meta-val">${w.status === 'delivered' ? w.eta.replace('Delivered ','') : w.eta.split('·')[1]?.trim() || '—'}</div>
                 </div>
-                <div class="receipt-meta-item" style="margin-left:auto;">
-                    <div class="receipt-meta-key" style="text-align:right;">View</div>
-                    <div class="receipt-meta-val" style="color:var(--gold);text-align:right;">›</div>
+                <div style="margin-left:auto;display:flex;gap:6px;align-items:center;">
+                    ${w.status === 'transit' ? `<button onclick="event.stopPropagation();openLiveLocation('${w.id}')" style="background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.3);border-radius:20px;padding:5px 10px;font-size:0.65rem;font-weight:700;color:var(--success);cursor:pointer;font-family:'Syne',sans-serif;display:flex;align-items:center;gap:4px;"><span style='width:5px;height:5px;background:var(--success);border-radius:50%;display:inline-block;animation:pulse 1.2s infinite;'></span>LIVE</button>` : ''}
+                    <div style="font-size:0.82rem;color:var(--gold);">›</div>
                 </div>
             </div>
         </div>`;
@@ -2842,6 +2926,7 @@ function openWaybillView(idx) {
                         <div class="waybill-party-name">${w.sender.name}</div>
                         <div class="waybill-party-detail" style="display:flex;flex-direction:column;gap:3px;">
                             <span>📞 ${w.sender.phone}</span>
+                            <span>🪪 NRC: ${w.sender.nrc || '—'}</span>
                             <span>📍 ${w.sender.addr}</span>
                         </div>
                     </div>
@@ -2853,6 +2938,7 @@ function openWaybillView(idx) {
                         <div class="waybill-party-name">${w.recipient.name}</div>
                         <div class="waybill-party-detail" style="display:flex;flex-direction:column;gap:3px;">
                             <span>📞 ${w.recipient.phone}</span>
+                            <span>🪪 NRC: ${w.recipient.nrc || '—'}</span>
                             <span>📍 ${w.recipient.addr}</span>
                         </div>
                     </div>
@@ -2993,6 +3079,192 @@ function printWaybill() { showToast('🖨 Opening print view…'); }
 
 // Init receipts on page load
 document.addEventListener('DOMContentLoaded', renderReceiptsList);
+
+// ─────────────────────────────────────────────
+//  LIVE LOCATION MAP
+// ─────────────────────────────────────────────
+let liveMap = null;
+let truckMarker = null;
+let liveAnimInterval = null;
+let liveRouteStep = 0;
+
+// Route coords: Lusaka Industrial → Kabwe → Kapiri → Kitwe (approx real road path)
+const liveRoutes = {
+    'ZM-2847': {
+        label: 'ZM-2847 · Lusaka Industrial → Kitwe',
+        from: 'Lusaka Industrial',
+        to: 'Kitwe',
+        waypoints: [
+            [-15.438, 28.322], // Lusaka Industrial
+            [-15.052, 28.312], // Chisamba area
+            [-14.444, 28.444], // Kabwe
+            [-13.972, 28.636], // Kapiri Mposhi
+            [-13.538, 28.756], // Ndola outskirts
+            [-12.812, 28.213], // Kitwe
+        ],
+        currentStep: 3, // truck is between Kabwe and Kapiri
+        locationNames: ['Lusaka Industrial','Chisamba','Kabwe','Kapiri Mposhi','Ndola Outskirts','Kitwe'],
+        eta: '14:30',
+        distLeft: [310, 248, 186, 148, 92, 0],
+        speed: [76, 89, 82, 78, 85, 0],
+    },
+    'ZM-2790': {
+        label: 'ZM-2790 · Northmead → Ndola',
+        from: 'Northmead Depot',
+        to: 'Ndola',
+        waypoints: [
+            [-15.393, 28.382], // Northmead
+            [-14.444, 28.444], // Kabwe
+            [-13.972, 28.636], // Kapiri
+            [-12.958, 28.637], // Ndola
+        ],
+        currentStep: 1,
+        locationNames: ['Northmead Depot','Kabwe','Kapiri Mposhi','Ndola'],
+        eta: '11:00',
+        distLeft: [420, 255, 130, 0],
+        speed: [72, 88, 80, 0],
+    }
+};
+
+function openLiveLocation(waybillId) {
+    const route = liveRoutes[waybillId] || liveRoutes['ZM-2847'];
+    document.getElementById('live-modal').classList.add('open');
+    document.getElementById('live-waybill-label').textContent = route.label;
+
+    // small delay to let modal animate in before initializing map
+    setTimeout(() => initLiveMap(route), 350);
+}
+
+function initLiveMap(route) {
+    // Destroy existing map instance if any
+    if (liveMap) {
+        liveMap.remove();
+        liveMap = null;
+        truckMarker = null;
+    }
+    if (liveAnimInterval) clearInterval(liveAnimInterval);
+
+    const mapEl = document.getElementById('live-map');
+    mapEl.innerHTML = '';
+
+    const step = route.currentStep;
+    const truckPos = route.waypoints[step];
+    const origin = route.waypoints[0];
+    const dest = route.waypoints[route.waypoints.length - 1];
+
+    liveMap = L.map('live-map', { zoomControl: true, attributionControl: false }).setView(truckPos, 8);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18
+    }).addTo(liveMap);
+
+    // Draw route polyline
+    const routeLine = L.polyline(route.waypoints, {
+        color: '#F0C040',
+        weight: 4,
+        opacity: 0.7,
+        dashArray: null
+    }).addTo(liveMap);
+
+    // Completed portion
+    L.polyline(route.waypoints.slice(0, step + 1), {
+        color: '#34D399',
+        weight: 4,
+        opacity: 0.9
+    }).addTo(liveMap);
+
+    // Origin marker
+    const originIcon = L.divIcon({
+        html: '<div class="origin-marker">🏭</div>',
+        iconSize: [24, 24], iconAnchor: [12, 12], className: ''
+    });
+    L.marker(origin, { icon: originIcon }).addTo(liveMap)
+        .bindPopup(`<b>${route.from}</b><br>Origin`);
+
+    // Destination marker
+    const destIcon = L.divIcon({
+        html: '<div class="dest-marker">🏁</div>',
+        iconSize: [28, 28], iconAnchor: [14, 14], className: ''
+    });
+    L.marker(dest, { icon: destIcon }).addTo(liveMap)
+        .bindPopup(`<b>${route.to}</b><br>Destination`);
+
+    // Waypoint dots
+    route.waypoints.slice(1, -1).forEach((wp, i) => {
+        const done = i + 1 < step;
+        L.circleMarker(wp, {
+            radius: 5,
+            fillColor: done ? '#34D399' : '#4A607A',
+            color: '#0D1117',
+            weight: 2,
+            fillOpacity: 1
+        }).addTo(liveMap).bindPopup(route.locationNames[i + 1]);
+    });
+
+    // Truck marker (animated)
+    const truckIcon = L.divIcon({
+        html: '<div class="truck-marker">🚛</div>',
+        iconSize: [36, 36], iconAnchor: [18, 18], className: ''
+    });
+    truckMarker = L.marker(truckPos, { icon: truckIcon, zIndexOffset: 1000 }).addTo(liveMap);
+    truckMarker.bindPopup(`<b>Your shipment</b><br>${route.locationNames[step]}`).openPopup();
+
+    // Update info bar
+    updateLiveInfoBar(route, step);
+
+    // Animate truck slowly along the next segment
+    animateTruck(route, step);
+}
+
+function animateTruck(route, fromStep) {
+    if (liveAnimInterval) clearInterval(liveAnimInterval);
+    const toStep = fromStep + 1;
+    if (toStep >= route.waypoints.length) return;
+
+    const startLat = route.waypoints[fromStep][0];
+    const startLng = route.waypoints[fromStep][1];
+    const endLat = route.waypoints[toStep][0];
+    const endLng = route.waypoints[toStep][1];
+
+    let t = 0;
+    const duration = 20000; // 20 seconds per segment (looks live)
+    const tick = 200;
+    liveAnimInterval = setInterval(() => {
+        t += tick;
+        const progress = Math.min(t / duration, 1);
+        const lat = startLat + (endLat - startLat) * progress;
+        const lng = startLng + (endLng - startLng) * progress;
+        if (truckMarker) truckMarker.setLatLng([lat, lng]);
+
+        // Update speed jitter
+        const baseSpeed = route.speed[fromStep];
+        const jitter = Math.round((Math.random() - 0.5) * 8);
+        document.getElementById('live-speed').textContent = (baseSpeed + jitter) + ' km/h';
+
+        if (progress >= 1) {
+            clearInterval(liveAnimInterval);
+            animateTruck(route, toStep);
+        }
+    }, tick);
+}
+
+function updateLiveInfoBar(route, step) {
+    document.getElementById('live-dist').textContent = route.distLeft[step] + ' km';
+    document.getElementById('live-speed').textContent = route.speed[step] + ' km/h';
+    document.getElementById('live-eta').textContent = route.eta;
+    document.getElementById('live-location-text').textContent =
+        route.locationNames[step] + ' · Last updated just now';
+}
+
+function closeLiveLocation() {
+    document.getElementById('live-modal').classList.remove('open');
+    if (liveAnimInterval) { clearInterval(liveAnimInterval); liveAnimInterval = null; }
+    if (liveMap) { liveMap.remove(); liveMap = null; truckMarker = null; }
+}
+
+function shareLiveLocation() {
+    showToast('📤 Live tracking link copied to clipboard!');
+}
 </script>
 </body>
 </html>
